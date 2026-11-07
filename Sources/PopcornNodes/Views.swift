@@ -191,18 +191,31 @@ struct NodeCard: View {
                 if !alerts.isEmpty {
                     HStack { ForEach(alerts, id: \.key) { Tag(text: $0.text, color: $0.severe ? .red : .orange) } }
                 }
-                metrics
+                if node.kind == .ping {
+                    Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 9) {
+                        GridRow {
+                            Metric(icon: "dot.radiowaves.left.and.right", label: L("응답 시간", "Latency"), value: st.s("latency_ms").map { "\($0) ms" } ?? "-")
+                            Metric(icon: "chart.line.downtrend.xyaxis", label: L("패킷 손실", "Packet loss"), value: st.s("loss") ?? "-")
+                        }
+                    }
+                    Text(L("SSH가 없는 장비라 연결 여부만 확인해요.", "No SSH on this device, so only reachability is checked."))
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    metrics
+                }
             }
 
             Divider()
             HStack(spacing: 8) {
-                Button { store.openTerminal(node) } label: { Label(L("터미널", "Terminal"), systemImage: "terminal") }
-                if node.vnc && !node.local { Button { store.openScreen(node) } label: { Label(L("화면 공유", "Screen"), systemImage: "display") } }
-                Button(action: onCommand) { Label(L("명령 실행", "Run"), systemImage: "chevron.left.forwardslash.chevron.right") }
-                    .disabled(st.state != .online)
+                if node.kind != .ping {
+                    Button { store.openTerminal(node) } label: { Label(L("터미널", "Terminal"), systemImage: "terminal") }
+                    if node.vnc && !node.local { Button { store.openScreen(node) } label: { Label(L("화면 공유", "Screen"), systemImage: "display") } }
+                    Button(action: onCommand) { Label(L("명령 실행", "Run"), systemImage: "chevron.left.forwardslash.chevron.right") }
+                        .disabled(st.state != .online)
+                }
                 Spacer()
                 Button { store.refresh(node) } label: { Image(systemName: "arrow.clockwise") }.help(L("이 장비만 새로고침", "Refresh this machine"))
-                if node.kind != .mac && !node.local {
+                if (node.kind == .windows || node.kind == .linux) && !node.local {
                     Menu {
                         Button(L("재시작…", "Restart…")) { confirm = "restart" }
                         Button(L("종료…", "Shut down…")) { confirm = "shutdown" }
@@ -380,6 +393,7 @@ struct CommandSheet: View {
             (L("GPU 상태", "GPU"), "nvidia-smi || echo 'no nvidia-smi'"),
             (L("Docker", "Docker"), "docker ps --format 'table {{.Names}}\\t{{.Status}}' 2>&1 | head -20"),
         ]
+        case .ping: return []
         case .windows: return [
             (L("상위 프로세스", "Top processes"), "Get-Process | Sort-Object CPU -Descending | Select-Object -First 12 Name,Id,CPU,@{n='MB';e={[int]($_.WS/1MB)}} | Format-Table -AutoSize | Out-String -Width 120"),
             (L("GPU 상태", "GPU"), "nvidia-smi"),
@@ -481,7 +495,7 @@ struct MenuPanel: View {
                 }
             }
             Spacer()
-            if st.state == .online {
+            if st.state == .online && n.kind != .ping {
                 Button { store.openTerminal(n) } label: { Image(systemName: "terminal") }.buttonStyle(.borderless)
                 if n.vnc && !n.local { Button { store.openScreen(n) } label: { Image(systemName: "display") }.buttonStyle(.borderless) }
             }
@@ -490,6 +504,7 @@ struct MenuPanel: View {
 
     func summary(_ n: NodeConfig, _ st: NodeStatus) -> String {
         var p: [String] = []
+        if let l = st.s("latency_ms") { p.append(L("응답 \(l)ms", "\(l) ms")) }
         if let c = st.cpuPercent(n) { p.append("CPU \(Int(c))%") }
         if let w = st.watts(n) { p.append("\(Int(w.0.rounded()))W") }
         if let f = st.diskFree { p.append(L("디스크 \(Int(f))GB", "\(Int(f))GB free")) }

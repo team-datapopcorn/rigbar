@@ -74,7 +74,7 @@ struct NodesSettings: View {
         if let s = selection, let n = store.config.nodes.first(where: { $0.id == s }) { draft = n }
     }
     var isNew: Bool { !store.config.nodes.contains { $0.id == draft.id } }
-    var valid: Bool { !draft.name.isEmpty && (draft.local || (!draft.host.isEmpty && !draft.user.isEmpty)) }
+    var valid: Bool { !draft.name.isEmpty && (draft.local || (!draft.host.isEmpty && (draft.kind == .ping || !draft.user.isEmpty))) }
 
     var editor: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -86,7 +86,16 @@ struct NodesSettings: View {
                         Picker("OS", selection: $draft.kind) { ForEach(NodeKind.allCases) { Text($0.label).tag($0) } }
                     }
                 }
-                if !draft.local {
+                if !draft.local && draft.kind == .ping {
+                    Section(L("연결 확인", "Reachability")) {
+                        TextField(L("주소 (IP 또는 호스트 이름)", "Host (IP or hostname)"), text: $draft.host)
+                        Toggle(L("항상 켜져 있어야 함 (꺼지면 알림)", "Should always be on (alert when unreachable)"), isOn: $draft.alwaysOn)
+                        Text(L("휴대폰, 태블릿, 공유기처럼 SSH가 없는 장비는 ping으로 연결 여부와 응답 시간만 봐요.",
+                               "For phones, tablets, routers and other devices without SSH: reachability and latency via ping."))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if !draft.local && draft.kind != .ping {
                     Section(L("SSH 접속", "SSH connection")) {
                         TextField(L("주소 (IP 또는 호스트 이름)", "Host (IP or hostname)"), text: $draft.host)
                         TextField(L("사용자", "User"), text: $draft.user)
@@ -95,7 +104,7 @@ struct NodesSettings: View {
                         Toggle(L("항상 켜져 있어야 함 (꺼지면 알림)", "Should always be on (alert when unreachable)"), isOn: $draft.alwaysOn)
                     }
                 }
-                Section(L("선택 사항", "Optional")) {
+                if draft.kind != .ping { Section(L("선택 사항", "Optional")) {
                     TextField(L("작업 표시용 잠금 경로", "Busy lock path"), text: $draft.lockPath,
                               prompt: Text(draft.kind == .windows ? "C:\\jobs\\.lock" : "/tmp/render.lock"))
                     if draft.kind != .mac {
@@ -107,7 +116,7 @@ struct NodesSettings: View {
                                "Windows/Linux power is estimated from these values. NVIDIA GPU power is measured and added."))
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                }
+                } }
             }
             .formStyle(.grouped)
 
@@ -133,7 +142,7 @@ struct NodesSettings: View {
             let st = await Runner.probe(n)
             testing = false
             if st.state == .online {
-                testResult = "✓ " + L("연결됨 · 디스크 여유 \(st.s("disk_free_gb") ?? "?")GB · \(String(format: "%.1f", st.seconds ?? 0))초",
+                testResult = n.kind == .ping ? "✓ " + L("응답 \(st.s("latency_ms") ?? "?")ms", "\(st.s("latency_ms") ?? "?") ms") : "✓ " + L("연결됨 · 디스크 여유 \(st.s("disk_free_gb") ?? "?")GB · \(String(format: "%.1f", st.seconds ?? 0))초",
                                       "Connected · \(st.s("disk_free_gb") ?? "?") GB free · \(String(format: "%.1f", st.seconds ?? 0))s")
             } else {
                 testResult = "✗ " + (st.error ?? "") + L(" (연결 방법 탭 참고)", " (see Setup guide)")

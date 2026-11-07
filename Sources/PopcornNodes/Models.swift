@@ -15,10 +15,10 @@ enum AppInfo {
 // MARK: - 설정
 
 enum NodeKind: String, Codable, CaseIterable, Identifiable {
-    case mac, windows, linux
+    case mac, windows, linux, ping
     var id: String { rawValue }
-    var label: String { switch self { case .mac: return "macOS"; case .windows: return "Windows"; case .linux: return "Linux" } }
-    var icon: String { switch self { case .mac: return "apple.logo"; case .windows: return "pc"; case .linux: return "terminal" } }
+    var label: String { switch self { case .mac: return "macOS"; case .windows: return "Windows"; case .linux: return "Linux"; case .ping: return L("기타 (ping만)", "Other (ping only)") } }
+    var icon: String { switch self { case .mac: return "apple.logo"; case .windows: return "pc"; case .linux: return "terminal"; case .ping: return "dot.radiowaves.left.and.right" } }
 }
 
 struct NodeConfig: Codable, Identifiable, Hashable {
@@ -144,7 +144,7 @@ struct NodeStatus {
 
     /// (와트, 실측 여부)
     func watts(_ n: NodeConfig) -> (Double, Bool)? {
-        guard state == .online else { return nil }
+        guard state == .online, n.kind != .ping else { return nil }
         if n.kind == .mac {
             let pin = mw("power_in_mw") ?? 0, load = mw("load_mw") ?? 0
             let w = (pin > 0 ? pin : load) / 1000

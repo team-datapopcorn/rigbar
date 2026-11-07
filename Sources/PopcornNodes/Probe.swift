@@ -9,6 +9,7 @@ enum Scripts {
         case .mac: return "LOCK=\(shQuote(n.lockPath))\n" + mac
         case .linux: return "LOCK=\(shQuote(n.lockPath))\n" + linux
         case .windows: return "$lock=\(psQuote(n.lockPath))\n" + windows
+        case .ping: return ""
         }
     }
 
@@ -108,13 +109,35 @@ enum Runner {
         switch n.kind {
         case .mac, .linux:
             return await run("/usr/bin/ssh", base + ["bash -s"], stdin: script, timeout: timeout)
+        case .ping:
+            return RunResult(code: -1, out: "", err: L("ping 전용 장비라 명령을 실행할 수 없어요.", "Ping-only device: commands aren't supported."), timedOut: false)
         case .windows:
             let wrapped = "$ProgressPreference='SilentlyContinue'; [Console]::OutputEncoding=[Text.Encoding]::UTF8\n" + script
             return await run("/usr/bin/ssh", base + [psEncoded(wrapped)], timeout: timeout)
         }
     }
 
+    /// SSH 없는 장비(휴대폰, 공유기 등): ping으로 연결 여부와 응답 시간만 확인
+    static func pingProbe(_ n: NodeConfig) async -> NodeStatus {
+        let t0 = Date()
+        let r = await run("/sbin/ping", ["-c", "3", "-i", "0.5", "-t", "6", n.host], timeout: 12)
+        var st = NodeStatus(updated: Date(), seconds: Date().timeIntervalSince(t0))
+        if let line = r.out.split(separator: "\n").first(where: { $0.contains("min/avg/max") }),
+           let nums = line.split(separator: "=").last?.split(separator: "/"), nums.count >= 2 {
+            st.state = .online
+            st.m["latency_ms"] = String(Int((Double(nums[1].trimmingCharacters(in: .whitespaces)) ?? 0).rounded()))
+            if let loss = r.out.split(separator: "\n").first(where: { $0.contains("packet loss") }) {
+                st.m["loss"] = loss.split(separator: ",").first(where: { $0.contains("loss") })?.trimmingCharacters(in: .whitespaces)
+            }
+        } else {
+            st.state = .offline
+            st.error = L("ping 응답 없음 (잠자기 중이거나 Tailscale 꺼짐)", "No ping reply (asleep or VPN off)")
+        }
+        return st
+    }
+
     static func probe(_ n: NodeConfig) async -> NodeStatus {
+        if n.kind == .ping { return await pingProbe(n) }
         let t0 = Date()
         let r = await exec(n, Scripts.probe(for: n), timeout: 40)
         var st = NodeStatus(updated: Date(), seconds: Date().timeIntervalSince(t0))
