@@ -6,12 +6,45 @@ enum Scripts {
 
     static func probe(for n: NodeConfig) -> String {
         switch n.kind {
-        case .mac: return "LOCK=\(shQuote(n.lockPath))\n" + mac
-        case .linux: return "LOCK=\(shQuote(n.lockPath))\n" + linux
+        case .mac: return "LOCK=\(shQuote(n.lockPath))\n" + mac + "\n" + jobDetails
+        case .linux: return "LOCK=\(shQuote(n.lockPath))\n" + linux + "\n" + jobDetails
         case .windows: return "$lock=\(psQuote(n.lockPath))\n" + windows
         case .ping: return ""
         }
     }
+
+    static let jobDetails = #"""
+if [ -n "$LOCK" ] && [ -e "$LOCK" ]; then
+  echo "lock=1"
+  if [ -d "$LOCK" ]; then
+    for field in name stage tool; do
+      if [ -f "$LOCK/$field" ]; then
+        printf 'job_%s=' "$field"; head -c 512 "$LOCK/$field" | tr '\r\n' '  '; echo
+      fi
+    done
+    started=$(head -c 20 "$LOCK/started" 2>/dev/null | tr -cd '0-9')
+    case "$started" in ''|*[!0-9]*) ;; *) now=$(date +%s); [ "$started" -le "$now" ] && echo "job_elapsed_s=$((now-started))";; esac
+    if [ -f "$LOCK/workdir" ]; then
+      echo "job_folder=$(basename "$(head -c 512 "$LOCK/workdir")")"
+    elif [ -f "$LOCK/owner" ]; then
+      echo "job_folder=$(basename "$(head -c 512 "$LOCK/owner" | cut -d '|' -f1 | sed 's/ *$//')")"
+    fi
+    # Older runners stored only an empty lock. Report a single observed work
+    # folder, explicitly marked as detection, never a fabricated task/step.
+    if [ ! -s "$LOCK/name" ] && [ ! -s "$LOCK/owner" ] && command -v lsof >/dev/null; then
+      pids=$(ps -Ao pid=,comm= | awk '$2 == "bash" || $2 == "/bin/bash" {print $1}' | head -16 | paste -sd, -)
+      if [ -n "$pids" ]; then
+        folders=$(lsof -a -p "$pids" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | grep -E '/render-jobs/mirror/|/\.aside/u/[0-9]+/sessions/' | sort -u)
+        if [ -n "$folders" ] && [ "$(printf '%s\n' "$folders" | wc -l | tr -d ' ')" = 1 ]; then
+          echo "job_folder=$(basename "$folders")"; echo "job_source=detected"
+        fi
+      fi
+    fi
+  fi
+else
+  echo "lock=0"
+fi
+"""#
 
     static let mac = #"""
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
@@ -26,7 +59,6 @@ echo "batt_left=$(echo "$b" | grep -oE '[0-9]+:[0-9]+ remaining' | cut -d' ' -f1
 io=$(ioreg -rw0 -c AppleSmartBattery)
 echo "power_in_mw=$(echo "$io" | grep -oE '"SystemPowerIn"=[0-9]+' | cut -d= -f2)"
 echo "load_mw=$(echo "$io" | grep -oE '"SystemLoad"=[0-9]+' | cut -d= -f2)"
-[ -n "$LOCK" ] && [ -e "$LOCK" ] && echo "lock=1" || echo "lock=0"
 echo "top=$(ps -Ao pcpu=,comm= -r 2>/dev/null | head -1 | awk '{p=$1; $1=""; n=$0; sub(".*/","",n); print p"% "n}')"
 """#
 
@@ -42,7 +74,6 @@ for b in /sys/class/power_supply/BAT*; do [ -e "$b/capacity" ] || continue
 ac=1; for a in /sys/class/power_supply/A*/online /sys/class/power_supply/*AC*/online; do [ -e "$a" ] && ac=$(cat "$a") && break; done; echo "ac=$ac"
 if command -v nvidia-smi >/dev/null; then IFS=, read -r w u t mu mt < <(nvidia-smi --query-gpu=power.draw,utilization.gpu,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits | head -1)
   echo "gpu_w=${w// /}"; echo "gpu_util=${u// /}"; echo "gpu_temp=${t// /}"; echo "gpu_mem=${mu// /}/${mt// /}"; fi
-[ -n "$LOCK" ] && [ -e "$LOCK" ] && echo "lock=1" || echo "lock=0"
 echo "top=$(ps -eo pcpu=,comm= --sort=-pcpu 2>/dev/null | head -1 | awk '{print $1"% "$2}')"
 """#
 
@@ -57,7 +88,22 @@ $o=Get-CimInstance Win32_OperatingSystem
 $b=Get-CimInstance -Namespace root\wmi BatteryStatus | Select-Object -First 1
 if($b){ "ac="+[int]$b.PowerOnline; "batt_pct="+(Get-CimInstance Win32_Battery | Select-Object -First 1).EstimatedChargeRemaining } else { "ac=1" }
 if(Get-Command nvidia-smi){ $g=(& nvidia-smi --query-gpu=power.draw,utilization.gpu,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits | Select-Object -First 1) -split ',\s*'; "gpu_w="+$g[0]; "gpu_util="+$g[1]; "gpu_temp="+$g[2]; "gpu_mem="+$g[3]+"/"+$g[4] }
-"lock="+[int]($lock -ne '' -and (Test-Path $lock))
+$busyLock=$lock -ne '' -and (Test-Path $lock)
+"lock="+[int]$busyLock
+if($busyLock -and (Test-Path $lock -PathType Container)) {
+  foreach($field in @('name','stage','tool')) {
+    $f=Join-Path $lock $field
+    if(Test-Path $f) { "job_"+$field+"="+((Get-Content $f -TotalCount 1) -replace '[\r\n]',' ') }
+  }
+  $started=0L
+  $f=Join-Path $lock 'started'
+  if((Test-Path $f) -and [long]::TryParse((Get-Content $f -TotalCount 1),[ref]$started)) {
+    $elapsed=[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()-$started
+    if($elapsed -ge 0) { "job_elapsed_s="+$elapsed }
+  }
+  $f=Join-Path $lock 'workdir'
+  if(Test-Path $f) { "job_folder="+(Split-Path (Get-Content $f -TotalCount 1) -Leaf) }
+}
 $p=Get-CimInstance Win32_PerfFormattedData_PerfProc_Process | Where-Object { $_.Name -notin '_Total','Idle' } | Sort-Object PercentProcessorTime -Descending | Select-Object -First 1
 "top="+[int]($p.PercentProcessorTime/[Environment]::ProcessorCount)+"% "+($p.Name -replace '#\d+$','')
 """#

@@ -234,7 +234,7 @@ final class Store: ObservableObject {
         status[nodes[0].id] = st(["uptime_s": "380000", "load1": "2.10", "ncpu": "8", "mem_free_pct": "38", "disk_free_gb": "142",
                                   "ac": "1", "batt_pct": "86", "power_in_mw": "14200", "load_mw": "11800", "top": "6.1% Safari"])
         status[nodes[1].id] = st(["uptime_s": "1290000", "load1": "7.40", "ncpu": "12", "mem_free_pct": "31", "disk_free_gb": "11",
-                                  "ac": "1", "load_mw": "38200", "lock": "1", "top": "61.0% ffmpeg"])
+                                  "ac": "1", "load_mw": "38200", "lock": "1", "job_name": L("주간 영상 한글 자막 합성", "Weekly video subtitles"), "job_stage": L("3편 중 2편 · 자막 합성 중", "Video 2 of 3 · Burning captions"), "job_tool": "ffmpeg", "job_elapsed_s": "754", "top": "61.0% ffmpeg"])
         status[nodes[2].id] = st(["uptime_s": "1680000", "cpu_pct": "12", "ncpu": "16", "mem_free_pct": "44", "disk_free_gb": "287",
                                   "ac": "0", "batt_pct": "41", "top": "4% chrome"])
         status[nodes[3].id] = NodeStatus(state: .offline, updated: now, error: "Connection timed out")

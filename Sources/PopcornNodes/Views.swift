@@ -191,6 +191,7 @@ struct NodeCard: View {
                 if !alerts.isEmpty {
                     HStack { ForEach(alerts, id: \.key) { Tag(text: $0.text, color: $0.severe ? .red : .orange) } }
                 }
+                if st.lockBusy { jobDetails }
                 if node.kind == .ping {
                     Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 9) {
                         GridRow {
@@ -237,6 +238,31 @@ struct NodeCard: View {
                  L("열려 있는 프로그램이 닫힙니다.", "Open programs will be closed.")
                  + (node.kind == .linux ? L(" (sudo 권한이 비밀번호 없이 설정돼 있어야 합니다)", " (requires passwordless sudo)") : ""))
         }
+    }
+
+    var jobDetails: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(L("진행 중인 작업", "Current job"), systemImage: "gearshape.2")
+                    .font(.caption).foregroundStyle(.blue)
+                Spacer()
+                if let elapsed = st.jobElapsed { Text(elapsed).font(.caption).foregroundStyle(.secondary).monospacedDigit() }
+            }
+            Text(st.jobTitle).font(.callout.weight(.semibold)).lineLimit(2).textSelection(.enabled)
+            if let stage = st.s("job_stage") {
+                Text(stage).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+            } else {
+                Text(st.s("job_source") == "detected"
+                     ? L("실행 폴더 감지 · 작업명·단계 미제공", "Work folder detected · name/stage not provided")
+                     : L("상세 단계 미제공", "No stage reported"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let tool = st.s("job_tool") {
+                Text(L("실행 도구: ", "Tool: ") + tool).font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue.opacity(0.07)))
     }
 
     @ViewBuilder var metrics: some View {

@@ -77,3 +77,9 @@ Estimates are labelled as such in the UI. A smart plug is still the ground truth
 ## License
 
 MIT © DataPopcorn. Made in Seoul by [DataPopcorn](https://datapopcorn.ai).
+
+### Current job details
+
+A lock directory can optionally contain UTF-8 files `name`, `stage`, `tool`, `started` (Unix epoch seconds) and `workdir`. The card shows the task name, reported stage, tool and elapsed time. Only the lock owner should write or clean these files. Never store full commands, arguments or credentials. Only the last component of the work directory is displayed. Legacy empty locks remain supported, with detected folders explicitly distinguished from reported task names. Details follow the configured refresh interval; no progress or stage is fabricated.
+
+Run model regression checks with `scripts/test-job-model.sh`.

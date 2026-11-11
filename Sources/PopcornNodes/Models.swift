@@ -134,6 +134,14 @@ struct NodeStatus {
     var battery: Int? { d("batt_pct").map { Int($0) } }
     var diskFree: Double? { d("disk_free_gb") }
     var lockBusy: Bool { d("lock") == 1 }
+    var jobTitle: String { s("job_name") ?? s("job_folder") ?? L("작업 정보 없음", "Job details unavailable") }
+    var jobElapsed: String? {
+        guard let seconds = d("job_elapsed_s"), seconds >= 0, seconds < 315_360_000 else { return nil }
+        let total = Int(seconds), hours = total / 3600, minutes = total % 3600 / 60
+        if hours > 0 { return L("\(hours)시간 \(minutes)분 경과", "\(hours)h \(minutes)m elapsed") }
+        if minutes > 0 { return L("\(minutes)분 \(total % 60)초 경과", "\(minutes)m \(total % 60)s elapsed") }
+        return L("\(total)초 경과", "\(total)s elapsed")
+    }
     var hasBattery: Bool { s("batt_pct") != nil }
 
     func cpuPercent(_ n: NodeConfig) -> Double? {
