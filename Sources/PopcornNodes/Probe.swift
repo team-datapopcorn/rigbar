@@ -81,7 +81,9 @@ echo "top=$(ps -eo pcpu=,comm= --sort=-pcpu 2>/dev/null | head -1 | awk '{print 
 $ErrorActionPreference='SilentlyContinue'; $ProgressPreference='SilentlyContinue'
 $o=Get-CimInstance Win32_OperatingSystem
 "uptime_s="+[int]((Get-Date)-$o.LastBootUpTime).TotalSeconds
-"cpu_pct="+[int]((Get-CimInstance Win32_Processor | Measure-Object LoadPercentage -Average).Average)
+# CPU는 순간값(LoadPercentage) 대신 2초 평균. 순간값은 이 조회 자체의 WMI 부하까지 잡혀 3~8배 높게 나왔다.
+$cq={ Get-CimInstance Win32_PerfRawData_PerfOS_Processor -Filter "Name='_Total'" }; $ca=& $cq; Start-Sleep -Milliseconds 2000; $cb=& $cq
+"cpu_pct="+[int][math]::Round([math]::Max(0,[math]::Min(100,100*(1-($cb.PercentProcessorTime-$ca.PercentProcessorTime)/[math]::Max(1,$cb.Timestamp_Sys100NS-$ca.Timestamp_Sys100NS)))))
 "ncpu="+[Environment]::ProcessorCount
 "mem_free_pct="+[int](100*$o.FreePhysicalMemory/$o.TotalVisibleMemorySize)
 "disk_free_gb="+[math]::Floor((Get-PSDrive C).Free/1GB)
