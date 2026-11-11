@@ -25,10 +25,15 @@
 
 <img src="docs/settings.png" width="560" alt="Settings">
 
+<img src="docs/setup-guide.png" width="560" alt="Setup guide">
+
 ## Install
 
-1. Download the latest `.dmg` from [Releases](https://github.com/team-datapopcorn/popcorn-nodes/releases) and drag **Popcorn Nodes** to Applications.
-2. Open it, then **Settings → Machines → +** to add a machine (name, host, user, OS) and press **Test connection**.
+1. Download `PopcornNodes-<version>.zip` from [Releases](https://github.com/team-datapopcorn/popcorn-nodes/releases/latest), unzip it and move **Popcorn Nodes** to Applications.
+2. The current release is ad-hoc signed, not yet notarized by Apple. The first launch shows "Apple could not verify…". Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (or run `xattr -dr com.apple.quarantine "/Applications/Popcorn Nodes.app"`). You only do this once. A notarized DMG and a Homebrew cask will follow.
+3. Open it, then **Settings → Machines → +** to add a machine (name, host, user, OS) and press **Test connection**.
+
+Prefer to build it yourself? See [Build from source](#build-from-source). It takes about a minute with the Xcode command line tools.
 
 Requires macOS 14 Sonoma or later (Apple silicon and Intel).
 
