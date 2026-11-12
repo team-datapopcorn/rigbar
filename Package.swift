@@ -1,7 +1,7 @@
 // swift-tools-version:5.10
 import PackageDescription
 let package = Package(
-    name: "PopcornNodes",
+    name: "Rigbar",
     platforms: [.macOS(.v14)],
-    targets: [.executableTarget(name: "PopcornNodes", path: "Sources/PopcornNodes")]
+    targets: [.executableTarget(name: "Rigbar", path: "Sources/Rigbar")]
 )

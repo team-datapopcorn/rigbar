@@ -93,5 +93,5 @@ if args.contains("--probe") {
     Task { @MainActor in renderPNG(AppIconView().frame(width: 1024, height: 1024), to: path, scale: 1); exit(0) }
     app.run()
 } else {
-    PopcornNodesApp.main()
+    RigbarApp.main()
 }

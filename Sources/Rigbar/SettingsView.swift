@@ -224,8 +224,8 @@ struct SetupGuide: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text(L("Popcorn Nodes는 서버 없이, 이 Mac의 SSH 키로 각 장비에 직접 접속해요. 장비마다 아래를 한 번만 해 두면 됩니다.",
-                       "Popcorn Nodes has no server. It connects to each machine directly with this Mac's SSH key. Do this once per machine."))
+                Text(L("Rigbar는 서버 없이, 이 Mac의 SSH 키로 각 장비에 직접 접속해요. 장비마다 아래를 한 번만 해 두면 됩니다.",
+                       "Rigbar has no server. It connects to each machine directly with this Mac's SSH key. Do this once per machine."))
                     .foregroundStyle(.secondary)
 
                 Step(n: 1, title: L("이 Mac의 SSH 키", "This Mac's SSH key")) {
@@ -273,7 +273,7 @@ struct SetupGuide: View {
     func makeKey() {
         let path = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh/id_ed25519").path
         Task {
-            let r = await Runner.run("/usr/bin/ssh-keygen", ["-t", "ed25519", "-N", "", "-f", path, "-C", "popcorn-nodes"], timeout: 20)
+            let r = await Runner.run("/usr/bin/ssh-keygen", ["-t", "ed25519", "-N", "", "-f", path, "-C", "rigbar"], timeout: 20)
             keyMessage = r.code == 0 ? L("키를 만들었어요. 이제 복사할 수 있어요.", "Key created. You can copy it now.") : r.err
         }
     }

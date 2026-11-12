@@ -13,14 +13,14 @@ IDENTITY=${IDENTITY:-$(security find-identity -v -p codesigning | grep "Develope
 echo "→ $VERSION, $IDENTITY"
 
 ./build.sh --no-install
-APP="build/Popcorn Nodes.app"
+APP="build/Rigbar.app"
 codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
 codesign --verify --strict --verbose=2 "$APP"
 
-DMG="build/PopcornNodes-$VERSION.dmg"
+DMG="build/Rigbar-$VERSION.dmg"
 STAGE=build/dmg; rm -rf "$STAGE" "$DMG"; mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"; ln -s /Applications "$STAGE/Applications"
-hdiutil create -volname "Popcorn Nodes" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+hdiutil create -volname "Rigbar" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 codesign --force --timestamp --sign "$IDENTITY" "$DMG"
 
 echo "→ 공증 요청 (보통 1~5분)"
@@ -31,4 +31,4 @@ spctl -a -t open --context context:primary-signature -v "$DMG"
 shasum -a 256 "$DMG" | awk '{print $1}' > "$DMG.sha256"
 echo "✓ $DMG"
 echo "  sha256 $(cat "$DMG.sha256")"
-echo "  다음: GitHub Releases에 v$VERSION 태그로 DMG 업로드, packaging/homebrew/popcorn-nodes.rb의 version·sha256 갱신"
+echo "  다음: GitHub Releases에 v$VERSION 태그로 DMG 업로드, packaging/homebrew/rigbar.rb의 version·sha256 갱신"

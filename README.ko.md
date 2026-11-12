@@ -1,6 +1,12 @@
-# Popcorn Nodes
+# Rigbar
 
-**내 컴퓨터 전부를 메뉴 막대 하나로.** Mac, Windows, Linux 장비를 SSH로 한 화면에서 봅니다. 서버도, 장비에 깔 프로그램도, 계정도, 데이터 수집도 없습니다.
+<img src="docs/icon.png" width="96" alt="Rigbar 아이콘" align="left">
+
+**내 컴퓨터 전부를 메뉴 막대 하나로 (All your rigs, one menu bar).** Mac, Windows, Linux 장비와 휴대폰까지 상태·알림·한 달 전기료를 SSH로 한 화면에서 봅니다. 서버도, 장비에 깔 프로그램도, 계정도, 데이터 수집도 없습니다.
+
+<br clear="left">
+
+> 예전 이름은 **Popcorn Nodes**입니다. 처음 실행하면 기존 설정을 자동으로 옮겨 옵니다.
 
 [English README](README.md)
 
@@ -29,8 +35,8 @@
 
 ## 설치
 
-1. [Releases](https://github.com/team-datapopcorn/popcorn-nodes/releases/latest)에서 `PopcornNodes-<버전>.zip`을 받아 압축을 풀고 **Popcorn Nodes**를 응용 프로그램 폴더로 옮깁니다.
-2. 지금 릴리스는 애플 공증 전이라 처음 열 때 "Apple에서 확인할 수 없습니다" 창이 뜹니다. **시스템 설정 → 개인정보 보호 및 보안** 맨 아래에서 **그래도 열기**를 누르세요. 터미널에서 `xattr -dr com.apple.quarantine "/Applications/Popcorn Nodes.app"`을 실행해도 됩니다. 처음 한 번만 하면 됩니다. 공증된 DMG와 Homebrew 설치는 다음 버전에서 제공합니다.
+1. [Releases](https://github.com/team-datapopcorn/rigbar/releases/latest)에서 `Rigbar-<버전>.zip`을 받아 압축을 풀고 **Rigbar**를 응용 프로그램 폴더로 옮깁니다.
+2. 지금 릴리스는 애플 공증 전이라 처음 열 때 "Apple에서 확인할 수 없습니다" 창이 뜹니다. **시스템 설정 → 개인정보 보호 및 보안** 맨 아래에서 **그래도 열기**를 누르세요. 터미널에서 `xattr -dr com.apple.quarantine "/Applications/Rigbar.app"`을 실행해도 됩니다. 처음 한 번만 하면 됩니다. 공증된 DMG와 Homebrew 설치는 다음 버전에서 제공합니다.
 3. 앱을 열고 **설정 → 장비 → +** 에서 이름, 주소, 사용자, OS를 넣고 **연결 테스트**를 누릅니다.
 
 직접 빌드하려면 아래 [직접 빌드](#직접-빌드)를 보세요. Xcode 커맨드라인 도구만 있으면 1분이면 됩니다.
@@ -53,13 +59,13 @@ macOS 14 Sonoma 이상 (Apple 실리콘, 인텔 모두 지원).
 
 - 모든 동작은 내 Mac에서만 일어납니다. 앱이 연결하는 곳은 내가 추가한 장비(SSH)와, 실행 시 한 번 업데이트 확인용 GitHub Releases API뿐입니다.
 - 기본 동작은 읽기 전용 조회입니다. 재시작·종료·직접 입력한 명령은 버튼을 눌렀을 때만 실행됩니다.
-- 설정 파일: `~/Library/Application Support/PopcornNodes/nodes.json`
+- 설정 파일: `~/Library/Application Support/Rigbar/nodes.json`
 
 ## 직접 빌드
 
 ```bash
-git clone https://github.com/team-datapopcorn/popcorn-nodes.git
-cd popcorn-nodes
+git clone https://github.com/team-datapopcorn/rigbar.git
+cd rigbar
 ./build.sh
 ```
 

@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-struct PopcornNodesApp: App {
+struct RigbarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         Window(AppInfo.name, id: "dashboard") {
@@ -72,7 +72,7 @@ struct DashboardView: View {
 
     var header: some View {
         HStack(alignment: .center, spacing: 14) {
-            Image(systemName: "server.rack").font(.system(size: 22, weight: .semibold)).foregroundStyle(.orange)
+            Image(systemName: "server.rack").font(.system(size: 22, weight: .semibold)).foregroundStyle(Color(red: 0.45, green: 0.40, blue: 0.95))
             VStack(alignment: .leading, spacing: 2) {
                 Text(AppInfo.name).font(.title2.bold())
                 Text(L("온라인 \(store.onlineCount)/\(store.config.nodes.count) · \(Int(store.config.pollSeconds))초마다 갱신",
@@ -297,7 +297,7 @@ struct NodeCard: View {
     func power(_ restart: Bool) {
         let c: String
         switch node.kind {
-        case .windows: c = restart ? "shutdown /r /t 5 /c \"Popcorn Nodes\"" : "shutdown /s /t 5 /c \"Popcorn Nodes\""
+        case .windows: c = restart ? "shutdown /r /t 5 /c \"Rigbar\"" : "shutdown /s /t 5 /c \"Rigbar\""
         default: c = restart ? "sudo -n shutdown -r now" : "sudo -n shutdown -h now"
         }
         Task { _ = await Runner.exec(node, c, timeout: 20); try? await Task.sleep(for: .seconds(8)); store.refresh(node) }
@@ -542,15 +542,31 @@ struct MenuPanel: View {
 // MARK: - 아이콘
 
 struct AppIconView: View {
+    // 짙은 남보라 바탕 위에 장비 3대(rig)가 쌓인 모양, 각 장비의 상태 점
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 230, style: .continuous)
-                .fill(LinearGradient(colors: [Color(red: 1, green: 0.62, blue: 0.2), Color(red: 0.93, green: 0.3, blue: 0.2)],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [Color(red: 0.16, green: 0.13, blue: 0.36), Color(red: 0.05, green: 0.06, blue: 0.14)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 230, style: .continuous).stroke(Color.white.opacity(0.10), lineWidth: 6))
                 .padding(100)
-            Image(systemName: "server.rack").font(.system(size: 420, weight: .semibold)).foregroundStyle(.white)
-            Circle().fill(Color.green).frame(width: 150, height: 150)
-                .overlay(Circle().stroke(Color.white, lineWidth: 22)).offset(x: 260, y: 260)
+            VStack(spacing: 46) {
+                ForEach(0..<3, id: \.self) { i in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 44, style: .continuous)
+                            .fill(LinearGradient(colors: [Color.white.opacity(0.95), Color(red: 0.82, green: 0.84, blue: 0.95)],
+                                                 startPoint: .top, endPoint: .bottom))
+                            .frame(width: 560, height: 150)
+                        HStack(spacing: 26) {
+                            Circle().fill([Color(red: 0.2, green: 0.85, blue: 0.45), Color(red: 0.2, green: 0.85, blue: 0.45), Color(red: 1, green: 0.62, blue: 0.15)][i])
+                                .frame(width: 54, height: 54)
+                                .shadow(color: [Color.green, Color.green, Color.orange][i].opacity(0.8), radius: 22)
+                            ForEach(0..<3, id: \.self) { _ in Capsule().fill(Color(red: 0.16, green: 0.13, blue: 0.36).opacity(0.25)).frame(width: 64, height: 18) }
+                        }
+                        .padding(.leading, 54)
+                    }
+                }
+            }
         }
         .frame(width: 1024, height: 1024)
     }

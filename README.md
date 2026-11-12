@@ -1,6 +1,12 @@
-# Popcorn Nodes
+# Rigbar
 
-**A tiny menu bar dashboard for every computer you own.** Macs, Windows PCs and Linux boxes, all on one screen, over plain SSH. No server, no agent to install, no account, no telemetry.
+<img src="docs/icon.png" width="96" alt="Rigbar icon" align="left">
+
+**All your rigs, one menu bar.** Rigbar keeps every computer you own (Macs, Windows PCs, Linux boxes, even phones) one click away: status, alerts and the monthly power bill, over plain SSH. No server, no agent to install, no account, no telemetry.
+
+<br clear="left">
+
+> Formerly **Popcorn Nodes**. Existing settings are carried over automatically on first launch.
 
 [한국어 README](README.ko.md)
 
@@ -29,8 +35,8 @@
 
 ## Install
 
-1. Download `PopcornNodes-<version>.zip` from [Releases](https://github.com/team-datapopcorn/popcorn-nodes/releases/latest), unzip it and move **Popcorn Nodes** to Applications.
-2. The current release is ad-hoc signed, not yet notarized by Apple. The first launch shows "Apple could not verify…". Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (or run `xattr -dr com.apple.quarantine "/Applications/Popcorn Nodes.app"`). You only do this once. A notarized DMG and a Homebrew cask will follow.
+1. Download `Rigbar-<version>.zip` from [Releases](https://github.com/team-datapopcorn/rigbar/releases/latest), unzip it and move **Rigbar** to Applications.
+2. The current release is ad-hoc signed, not yet notarized by Apple. The first launch shows "Apple could not verify…". Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (or run `xattr -dr com.apple.quarantine "/Applications/Rigbar.app"`). You only do this once. A notarized DMG and a Homebrew cask will follow.
 3. Open it, then **Settings → Machines → +** to add a machine (name, host, user, OS) and press **Test connection**.
 
 Prefer to build it yourself? See [Build from source](#build-from-source). It takes about a minute with the Xcode command line tools.
@@ -39,7 +45,7 @@ Requires macOS 14 Sonoma or later (Apple silicon and Intel).
 
 ## Connecting machines
 
-Popcorn Nodes uses your Mac's existing SSH key (`~/.ssh`) in non-interactive mode, so each machine needs key-based login once. The in-app **Setup guide** tab has copy buttons for all of this.
+Rigbar uses your Mac's existing SSH key (`~/.ssh`) in non-interactive mode, so each machine needs key-based login once. The in-app **Setup guide** tab has copy buttons for all of this.
 
 | Machine | One-time setup |
 |---|---|
@@ -55,13 +61,13 @@ Keys protected by a passphrase must be loaded into the macOS keychain (`ssh-add 
 
 - Everything runs locally. The app talks only to the machines you add (over SSH) and, once at launch, to the GitHub Releases API to check for updates.
 - Read-only probes by default. Restart/shutdown and custom commands only run when you click them.
-- Config lives in `~/Library/Application Support/PopcornNodes/nodes.json`.
+- Config lives in `~/Library/Application Support/Rigbar/nodes.json`.
 
 ## Build from source
 
 ```bash
-git clone https://github.com/team-datapopcorn/popcorn-nodes.git
-cd popcorn-nodes
+git clone https://github.com/team-datapopcorn/rigbar.git
+cd rigbar
 ./build.sh            # universal build, ad-hoc signed, installs to ~/Applications
 ```
 

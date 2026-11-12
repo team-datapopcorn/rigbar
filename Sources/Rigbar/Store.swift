@@ -32,7 +32,13 @@ final class Store: ObservableObject {
     }
 
     init() {
-        dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("PopcornNodes")
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        dir = support.appendingPathComponent("Rigbar")
+        // 예전 이름(Popcorn Nodes) 설정이 있으면 그대로 옮겨 온다
+        let legacy = support.appendingPathComponent("PopcornNodes")
+        if !FileManager.default.fileExists(atPath: dir.path), FileManager.default.fileExists(atPath: legacy.path) {
+            try? FileManager.default.copyItem(at: legacy, to: dir)
+        }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let cfgURL = dir.appendingPathComponent("nodes.json")
         if let d = try? Data(contentsOf: cfgURL), let c = try? JSONDecoder().decode(AppConfig.self, from: d) {
@@ -179,7 +185,7 @@ final class Store: ObservableObject {
     // MARK: 동작
 
     func openTerminal(_ n: NodeConfig) {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("popcorn-nodes-\(n.id.prefix(8)).command")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("rigbar-\(n.id.prefix(8)).command")
         let port = n.port == 22 ? "" : "-p \(n.port) "
         let cmd = n.local ? "#!/bin/zsh\ncd ~\nexec zsh -l\n" : "#!/bin/zsh\nexec ssh \(port)\(n.sshTarget)\n"
         try? cmd.write(to: url, atomically: true, encoding: .utf8)

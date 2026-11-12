@@ -6,8 +6,8 @@ let isKorean: Bool = Locale.preferredLanguages.first?.hasPrefix("ko") ?? false
 func L(_ ko: String, _ en: String) -> String { isKorean ? ko : en }
 
 enum AppInfo {
-    static let name = "Popcorn Nodes"
-    static let repoSlug = "team-datapopcorn/popcorn-nodes"
+    static let name = "Rigbar"
+    static let repoSlug = "team-datapopcorn/rigbar"
     static var repoURL: URL { URL(string: "https://github.com/\(repoSlug)")! }
     static var version: String { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev" }
 }

@@ -116,7 +116,7 @@ struct RunResult { var code: Int32; var out: String; var err: String; var timedO
 enum Runner {
     static let sshOpts = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ServerAliveInterval=10", "-o", "StrictHostKeyChecking=accept-new",
                           // 연결 재사용: 매 갱신마다 SSH 핸드셰이크를 새로 하지 않아 CPU를 덜 씀
-                          "-o", "ControlMaster=auto", "-o", "ControlPath=/tmp/popcorn-nodes-%C", "-o", "ControlPersist=300"]
+                          "-o", "ControlMaster=auto", "-o", "ControlPath=/tmp/rigbar-%C", "-o", "ControlPersist=300"]
 
     static func run(_ exe: String, _ args: [String], stdin: String? = nil, timeout: Double) async -> RunResult {
         await withCheckedContinuation { cont in
